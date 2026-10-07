@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Hvordan Jarvis leser, endrer, lagrer og deler Google-kalenderdata, og hvordan tilgangen kan tilbakekalles.">
+<title>Personvern — Jarvis</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#192331;font:17px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:820px;margin:0 auto;padding:52px 24px 72px}nav{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:48px}a{color:#174d8e;text-underline-offset:4px}a:hover{color:#0a2b52}h1{font-size:clamp(2.2rem,7vw,3.5rem);line-height:1.12;margin:0 0 20px;letter-spacing:-.04em}h2{font-size:1.35rem;line-height:1.3;margin-top:38px}p,ul{margin:16px 0}.intro{font-size:1.16rem;color:#435265}.tag{font-size:.82rem;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:#52657b}.note{border-left:3px solid #7595b7;padding:10px 18px;background:#eaf0f6;border-radius:0 8px 8px 0}footer{border-top:1px solid #d8e0e9;margin-top:48px;padding-top:20px;font-size:.88rem;color:#52657b}li{margin:8px 0}code{font-size:.85em;overflow-wrap:anywhere}@media print{body{background:white}main{padding:0}nav{margin-bottom:24px}}</style>
+</head>
+<body><main>
+<nav aria-label="Hovedmeny"><a href="./">Jarvis</a><a href="privacy.html">Personvern</a></nav>
+<p class="tag">Jarvis · Personvern</p>
+<h1>Hvordan Jarvis behandler data</h1>
+<p class="intro">Dette beskriver den implementerte private Jarvis-assistenten. Informasjonssiden er offentlig, men publiserer ingen kalenderdata, samtaler, minner eller innloggingsfiler.</p>
+<h2>1. Formål og ansvar</h2>
+<p>Jarvis drives av <a href="https://github.com/Johbra96">Johbra96</a> for privat personlig bruk. Google-data brukes til kalenderoversikt, å finne kalenderhull, tydelig brukerbestilte avtalehandlinger og relevant periodisk oppfølging. Opplysningene brukes ikke av Jarvis til annonser, salg av data eller kredittvurdering.</p>
+<h2>2. Kalenderdata som leses</h2>
+<p>Jarvis kan lese listen over tilgjengelige Google-kalendere, blant annet navn, ID, tidssone, hovedkalender og tilgangsrolle. Avtalelesing omfatter tittel, dato og klokkeslett, heldagsmarkering, sted, status, opptatt/ledig-markering, gjentakelser og forekomster, avtale-/serie-ID og versjonsmetadata. Detaljlesing kan også omfatte avtalens beskrivelse/notater.</p>
+<p>Arrangør- og deltakerinformasjon kan leses for å avgjøre om en avtale er din egen og har gjester. Jarvis oppretter ikke et eget kontaktregister. OAuth gir kontotilgang innen de godkjente scopene; lokale kalender-ID-begrensninger kan innsnevre hva Jarvis bruker.</p>
+<h2>3. Kalenderdata som endres</h2>
+<p>På en tydelig bestilling kan Jarvis opprette egne avtaler, endre tittel, notater, sted og tidsrom, flytte dato/tid og slette den entydig valgte avtalen. Tidssone er som standard Europe/Oslo. Ved en eksisterende gjentakelse må riktig forekomst eller hele serie være valgt. Bare vanlige egne avtaler uten gjester i eierkalendere kan endres.</p>
+<p>Det sendes ikke invitasjoner, legges ikke til gjester og opprettes ikke konferanser. Jarvis endrer ikke kalenderens tilgangsliste. Nye gjentakelsesregler og flytting mellom kalendere inngår ikke i dette omfanget. Automatisk puls kan lese kalenderkontekst, men har ingen kalenderhandlinger.</p>
+<p>Google-samtykket omfatter <code>calendar.calendarlist.readonly</code>, <code>calendar.events.readonly</code> og, når kalenderhandlinger er aktivert, <code>calendar.events.owned</code>. Programmet håndhever snevrere handlingsgrenser enn det OAuth-samtykket alene tillater.</p>
+<h2>4. Lokal lagring og minne</h2>
+<p>Samtaler, verktøykall og resultater lagres lokalt i SQLite. Kalenderoperasjoner journalføres med bestillingskilde, opprinnelig brukersitat, kalender-/avtale-ID, ønskede endringer og faktisk bekreftet resultat. Stabile ID-er og versjonsvern reduserer duplikater ved gjentatt levering eller omstart.</p>
+<p>Periodiske vurderinger kan lagre kompakte kalenderutdrag, beslutninger og kildebelegg i lokal SQLite, inkludert modellens observasjoner eller hypoteser. Brukeropplysninger som modellen vurderer som varig relevante, kan lagres med kilde i Markdown og SQLite. Rå kalenderavtaler speiles ikke automatisk inn i langtidsminne eller den interne worker-køen.</p>
+<p>Google OAuth-innlogging lagres lokalt i beskyttede filer for automatisk tokenfornyelse. Innloggingstokens sendes til Google for autorisering, ikke til modellens samtalekontekst eller den offentlige nettsiden. Lokal lagring har filrettigheter, men ingen egen appkryptering; maskinens sikkerhet og eventuelle sikkerhetskopier er eierens ansvar.</p>
+<h2>5. Tjenester som mottar data</h2>
+<ul>
+<li><strong>Google:</strong> Innlogging, tokenfornyelse, kalenderoppslag og de uttrykkelig bestilte avtaleendringene behandles av Google Calendar API. Avtalene lagres fortsatt hos Google.</li>
+<li><strong>OpenAI:</strong> Jarvis bruker Codex med ChatGPT-innlogging. Relevante samtalemeldinger, minner og kalenderverktøyresultater kan sendes til OpenAI for å velge oppslag, formulere svar og vurdere relevant oppfølging. Kalenderbeskrivelser kan følge med når avtaledetaljer hentes. Dette er ekstern modellbehandling, ikke lokal inferens.</li>
+<li><strong>Discord:</strong> Brukerbestillinger og Jarvis-svar går gjennom Discord. Kalenderopplysninger som gjengis i svar eller proaktive meldinger, blir dermed del av Discord-samtalen. Bottilgang er lokalt begrenset til konfigurert bruker og tillatt kanal eller DM.</li>
+<li><strong>GitHub:</strong> GitHub Pages leverer bare disse offentlige informasjonssidene og kan behandle vanlige nettforespørsler og tekniske besøksdata etter sine egne regler. Ingen Jarvis-kode, konfigurasjon, minner, kalenderinnhold eller innloggingsfiler er publisert her. Sidene har ingen egne informasjonskapsler, analyseverktøy, skjemaer, JavaScript eller innebygd kalender.</li>
+</ul>
+<p>Leverandørenes lagring, behandling og eventuell bruk til modellforbedring avhenger av deres aktuelle vilkår og konto-/datainnstillinger. Jarvis har ingen egen modelltreningsfunksjon, men denne siden er <strong>ikke</strong> en garanti for at en ekstern leverandør ikke lagrer data eller bruker dem til forbedring. Det må kontrolleres i den aktuelle kontoen. Google-data skal brukes og overføres innenfor <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, inkludert Limited Use. Publisering av denne teksten er ikke en Google-godkjenning av oppsettet.</p>
+<h2>6. Lagringstid og sletting</h2>
+<p>Jarvis har ingen generell automatisk utløpstid for lokal samtale- og operasjonshistorikk. Data kan derfor bli liggende til eieren rydder dem. «Glem dette» kan fjerne et identifisert langtidsminne og hindre gjenhenting, men sletter ikke automatisk den opprinnelige samtalen, verktøyhistorikken, sikkerhetskopier eller tredjepartenes kopier.</p>
+<p>Sletting av en kalenderavtale i Google fjerner ikke den tidligere bestillingen eller det lokale operasjonsbelegget. For full lokal opprydding må eieren håndtere relevante SQLite-/Markdown-data og sikkerhetskopier. Meldinger og data hos Google, Discord og OpenAI må håndteres med deres egne kontroller; Jarvis lover ikke automatisk sletting der.</p>
+<h2>7. Tilbakekall Google-tilgangen</h2>
+<ol>
+<li>Åpne <a href="https://myaccount.google.com/connections">Google-kontoens tredjepartstilkoblinger</a>, velg Jarvis-klienten og fjern tilgangen. Klientens viste navn kan avhenge av Googles branding-status.</li>
+<li>Deaktiver kalenderintegrasjonen lokalt og start Jarvis-tjenesten på nytt dersom kalenderbruk også skal stoppes i programmet. Lokale Google-innloggingsfiler kan deretter fjernes av eieren.</li>
+<li>Tilbakekalling hindrer fremtidig tilgang gjennom den innloggingen. Den sletter ikke eksisterende avtaler eller tidligere lagrede lokale data og meldinger.</li>
+</ol>
+<h2>8. Kontakt og videre bruk</h2>
+<p>Dette er en privat assistent for eieren, ikke en offentlig tjeneste som registrerer nye brukere. Personvernspørsmål og forespørsler om innsyn eller lokal sletting håndteres av eieren gjennom den eksisterende private Jarvis-kanalen. Den offentlige prosjekteierprofilen er <a href="https://github.com/Johbra96">Johbra96</a>. Ikke legg sensitive opplysninger i offentlige GitHub-henvendelser.</p>
+<p>Ved endringer i databruk eller tilganger skal informasjonen oppdateres og nødvendig nytt samtykke innhentes. Les også <a href="./#bruksvilkar">vilkårene for privat bruk</a>.</p>
+<footer>Jarvis · Privat prosjekt · Oppdatert 7. oktober 2026<br><a href="privacy.html">Personvern</a> · <a href="./#bruksvilkar">Vilkår for privat bruk</a></footer>
+</main></body>
+</html>
